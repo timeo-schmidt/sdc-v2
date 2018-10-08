@@ -1,0 +1,142 @@
+<html>
+
+<head>
+    <title>SDC 2.0 Gravity Control</title>
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <style>
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        
+        .break {
+            height: 90vh;
+            width: 50vw;
+            background: #e74c3c;
+            float: left;
+        }
+        
+        .gas {
+            height: 90vh;
+            width: 50vw;
+            background: #2ecc71;
+            float: left;
+        }
+        
+        .label {
+            font-size: 2em;
+            text-align: center;
+            margin-top: 10vh;
+            font-weight: bold;
+            font-family: Arial;
+            color: white;
+        }
+        
+        .steering-indicator {
+            float: left;
+            height: 10vh;
+            width: 100vw;
+            z-index: 2;
+            background: white;
+        }
+        
+        .steering-point {
+            height: 4vw;
+            width: 4vw;
+            border-radius: 4vw;
+            margin-top: 1vh;
+            background: #3498db;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="steering-indicator">
+        <div class="steering-point"></div>
+    </div>
+
+    <div class="break">
+        <div class="label">
+            <!--            BRAKE-->
+        </div>
+    </div>
+
+    <div class="gas">
+        <div class="label">
+            <!--            GAS-->
+        </div>
+    </div>
+
+
+    <script>
+        var ip = "192.168.1.103"
+        
+        var steer;
+        var thrust = 0;
+
+        $(document).ready(function() {
+            window.ondevicemotion = function(event) {
+                steer = event.accelerationIncludingGravity.y;
+                position = (steer + 10) * 4.8
+                $(".steering-point").css("margin-left", String(parseInt(position)) + "vw");
+            }
+            
+            $( document ).on( "vmousedown", ".break", function() {
+                thrust = -1
+            });
+            
+            $( document ).on( "vmouseup", ".break", function() {
+                thrust = 0
+            });
+            
+            $( document ).on( "vmousedown", ".gas", function() {
+                thrust = 0.2;
+            });
+            
+            $( document ).on( "vmouseup", ".gas", function() {
+                thrust = 0
+            });
+            
+            // http://192.168.178.115/drive?steer=-100.0&speed=0
+            setInterval(function() {
+                console.log("Request Sent!")
+                realSteeringValParam = steer / 10
+
+                console.log(thrust);
+                
+                
+                if (realSteeringValParam > 1) {
+                    realSteeringValParam = 1
+                }
+                if (realSteeringValParam < -1) {
+                    realSteeringValParam = -1
+                }
+
+
+                $.get("http://" + ip + "/drive", {
+                    speed: thrust,
+                    steer: realSteeringValParam
+                });
+            }, 50)
+
+        });
+
+    </script>
+
+</body>
+
+
+</html>
